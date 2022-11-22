@@ -1,5 +1,6 @@
 import pygame
 from pygame.locals import *
+import python
 pygame.init()
 vec=pygame.math.Vector2
 
@@ -104,4 +105,10 @@ class HUD(pygame.sprite.Sprite):
         self.pos=vec(posX,posY)
 
 
-    
+class Level():
+    def __init__(self):
+        self.level=[[],[],[],[],[],[],[],[],[]]
+
+    def generate(self):
+        for eachRow in self.level:
+            pass  #Generate level 1 row at a time
