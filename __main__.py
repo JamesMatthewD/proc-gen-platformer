@@ -12,7 +12,7 @@ windowTitle=random.choice(windowTitles)  #Chooses a random window title
 WIDTH=1600
 HEIGHT=900
 screen=pygame.display.set_mode([WIDTH, HEIGHT])
-pygame.display.set_caption(windowTitle)
+pygame.display.set_caption(str(windowTitle))
 FPS=60  #Screen setup
 
 framePerSec=pygame.time.Clock()  #will be used for tracking FPS to detect issues when testing
