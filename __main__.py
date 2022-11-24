@@ -4,15 +4,10 @@ import classes, random, os, sys, time
 
 pygame.init()  #Pygame Initialisation
 
-myFile=open('windowTitles.txt', 'r')
-windowTitles=myFile.readlines()
-myFile.close()
-windowTitle=random.choice(windowTitles)  #Chooses a random window title
-
 WIDTH=1600
 HEIGHT=900
 screen=pygame.display.set_mode([WIDTH, HEIGHT])
-pygame.display.set_caption(str(windowTitle))
+pygame.display.set_caption('Game')
 FPS=60  #Screen setup
 
 framePerSec=pygame.time.Clock()  #will be used for tracking FPS to detect issues when testing
