@@ -18,7 +18,7 @@ allSprites.add(PLAYER)
 
 controls={left: 'K_LEFT',
           right: 'K_RIGHT',
-          jump: 'K_UP'
+          jump: 'K_UP',
           attack: 'K_z',
           specialAttack: 'K_x'}  #Will hopefully be editable but these will be the controls for the player
 

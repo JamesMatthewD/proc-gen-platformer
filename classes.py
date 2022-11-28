@@ -1,6 +1,6 @@
 import pygame
 from pygame.locals import *
-import python
+import random
 pygame.init()
 vec=pygame.math.Vector2
 
@@ -21,19 +21,25 @@ class MovingEntity(pygame.sprite.Sprite):
     def move(self, moveType):
         if moveType=='Left':
             ##Process left movement
+            pass
         elif moveType=='Right':
             ##Process right movement
+            pass
         elif moveType=='Jump':
             ##Call jump method//continue jump
+            pass
         elif moveType=='Attack':
             ##Proccess standard attack
+            pass
         elif moveType=='Special Attack':
             ##Proccess the special attack, wouldn't be called by enemies
+            pass
         else:
             ##Stop acceleration or jump and check colissions
+            pass
 
 
-    def checkCollisions(self, objectGroup, otherGroup, False):
+    def checkCollisions(self, objectGroup, otherGroup):
         ##Checks the collisions
         pass
 
