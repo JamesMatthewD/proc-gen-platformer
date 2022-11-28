@@ -16,9 +16,18 @@ PLAYER=classes.Player(5, 0, 0, 3)
 allSprites=pygame.sprite.Group()
 allSprites.add(PLAYER)
 
+controls={left: 'K_LEFT',
+          right: 'K_RIGHT',
+          jump: 'K_UP'
+          attack: 'K_z',
+          specialAttack: 'K_x'}  #Will hopefully be editable but these will be the controls for the player
+
 def screenUpdate():
     for eachSprite in allSprites:
-        eachSprite.update()
+        try:
+            eachSprite.update()
+        except:
+            pass
 
     pygame.display.update()
     framePerSec.tick(FPS)
@@ -30,5 +39,7 @@ while True:  #Game Loop
             pygame.quit()
             sys.exit()
             break
+    screen.fill(255,255,255)  #Testing purposes only
+        #Check for inputs here, if one is recieved then call the move method [PLAYER.super().move(move type)], move will be called from the enemy pathfind method.
 
     screenUpdate()  #Subprogram to update the positions of all sprites and display them
