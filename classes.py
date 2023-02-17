@@ -18,38 +18,298 @@ class MovingEntity(pygame.sprite.Sprite):
         self.jumping=False
 
 
-    def move(self, moveType):
-        if moveType=='Left':
+    def move(self, ACC, FRIC, blockGroup, SELF, moveType=None):
+
+        self.oldPos=self.pos
+
+        self.acc=vec(0,0.32)
+        
+        if moveType=='left' or moveType=='right':
             ##Process left movement
-            pass
-        elif moveType=='Right':
-            ##Process right movement
-            pass
-        elif moveType=='Jump':
+            if moveType=='left':
+                self.acc.x-=ACC
+            else:
+                self.acc.x+=ACC
+
+        self.acc.x+=self.vel.x * FRIC
+        self.vel+=self.acc
+
+
+        self.pos.y+=self.vel.y+0.5*self.acc.y
+
+        
+        self.pos.x+=self.vel.x+0.5*self.acc.x
+
+        self.checkCollisions(blockGroup, SELF)
+
+        self.rect=self.surf.get_rect(center=(self.pos.x, self.pos.y))
+                
+        if moveType=='jump':
             ##Call jump method//continue jump
-            pass
-        elif moveType=='Attack':
+            if self.jumping==False:
+                self.jump(blockGroup)
+
+            '''    
+            if self.jumping==True:
+                for event in pygame.event.get():
+                    if event.type==pygame.KEYDOWN:
+                        if pygame.K_UP not in pygame.KEYDOWN:
+                            self.cancelJump()
+            '''
+                
+        elif moveType=='attack':
             ##Proccess standard attack
             pass
-        elif moveType=='Special Attack':
+        elif moveType=='specialAttack':
             ##Proccess the special attack, wouldn't be called by enemies
             pass
-        else:
-            ##Stop acceleration or jump and check colissions
-            pass
 
 
-    def checkCollisions(self, objectGroup, otherGroup):
-        ##Checks the collisions
-        pass
+    def checkCollisions(self, otherGroup, SELF, recursions=0):
+        collisions=pygame.sprite.spritecollide(SELF, otherGroup, False)
+        xMoved=False
+        yMoved=False        
+        for eachSprite in collisions:
 
-    def jump(self):
+            #print("est: ", eachSprite.type, "st: ", SELF.type)
+
+            if eachSprite.type==2 and (SELF.type==1 or SELF.type==0) and eachSprite.type!=SELF.type and xMoved==False and yMoved==False:
+
+                #print("enemy or player attempting to collide with wall")
+
+                #print(SELF.pos.x, SELF.pos.y, eachSprite.pos.x, eachSprite.pos.y)
+                '''
+
+                pushBack=-SELF.vel.x
+                SELF.pos.x-=pushBack
+
+                self.vel.x=0
+
+
+                if SELF.pos.y>eachSprite.pos.y:
+                    SELF.pos.y=eachSprite.rect.bottom+47
+                    
+                else:
+                    SELF.pos.y=eachSprite.rect.top-47
+                    SELF.vel.y=0
+                    SELF.jumping=False   
+
+
+                hits=pygame.sprite.spritecollide(SELF, otherGroup, False)
+                if hits and recursions<10:
+                    SELF.checkCollisions(otherGroup, SELF, recursions+1)
+                    break
+
+
+                hits=pygame.sprite.spritecollide(SELF, otherGroup, False)
+
+                if hits:
+                    difference=SELF.pos-eachSprite.pos
+
+                    if SELF.vel.x!=0:
+
+                        if difference.x<0:
+                            SELF.pos.x=eachSprite.rect.right+47
+                        else:
+                            SELF.pos.x=eachSprite.rect.left-47
+
+                    if difference.y<0:
+                        SELF.pos.y=eachSprite.rect.top-47
+                    else:
+                        SELF.pos.y=eachSprite.rect.bottom+47
+                '''
+
+            
+                '''
+                yDiff=SELF.pos.y-eachSprite.pos.y
+                xDiff=SELF.pos.x-eachSprite.pos.x
+
+                if abs(xDiff) > abs(yDiff):
+                    SELF.pos.x-=xDiff
+
+                elif abs(xDiff) < abs(yDiff):
+                    
+                    if yDiff>0:
+                        SELF.pos.y+=SELF.vel.y
+                        SELF.jumping=False
+                        SELF.vel.y=0
+
+                    else:
+                        SELF.pos.y-=SELF.vel.y
+
+            
+                ##Old system which didnt work           
+                if SELF.pos.x > eachSprite.pos.x:
+                    #pushBack=(-SELF.vel.x)
+                    print("p>b")
+                    SELF.pos.x=eachSprite.rect.right+40
+
+                elif SELF.pos.x < eachSprite.pos.x:
+                    #pushBack=SELF.vel.x
+                    print("p<b")
+                    SELF.pos.x=eachSprite.rect.left-40
+
+                else:
+                    print("pos x are same")
+
+                if SELF.pos.y > eachSprite.pos.y:
+                    #pushBack=SELF.vel.y
+                    SELF.vel.y=0
+                    print("p>b")
+                    SELF.pos.y=eachSprite.rect.bottom+50
+
+                elif SELF.pos.y < eachSpirte.pos.y:
+                    #pushBack=-SELF.vel.y
+                    print("p<b")
+                    SELF.vel.y=0
+                    SELF.jumping=False
+                    SELF.pos.y=eachSprite.rect.top-50
+                
+                ##pushback attempt 1
+                print(pushBack)
+                SELF.pos-=pushBack
+                print(SELF.pos)
+                '''
+
+                ##find edge of block and player, then compare and put player in correct place relative
+                blockEdges=[]  #I add each of the edges for the block into an array
+                blockEdges.append(eachSprite.rect.top)
+                blockEdges.append(eachSprite.rect.bottom)
+                blockEdges.append(eachSprite.rect.right)
+                blockEdges.append(eachSprite.rect.left)
+                
+                entityEdges=[]  #I do the same for the entity thats moving
+                entityEdges.append(SELF.rect.top)
+                entityEdges.append(SELF.rect.bottom)
+                entityEdges.append(SELF.rect.right)
+                entityEdges.append(SELF.rect.left)
+
+                #perform collision check here, check vel and if moving in direction then compare the respective ones. y first
+                '''
+                if SELF.vel.y>0:
+                    if entityEdges[1]>blockEdges[0]:
+                        SELF.pos.y=blockEdges[0]-48
+                        SELF.vel.y=0
+                        SELF.jumping=False
+                        yMoved=True
+
+                elif SELF.vel.y<0:
+                    if entityEdges[0]<blockEdges[1]:
+                        SELF.pos.y=blockEdges[1]+48
+                        SELF.vel.y=0
+                        yMoved=True
+
+                if SELF.vel.x>0:
+                    if entityEdges[2]>blockEdges[3]:
+                        SELF.pos.x=blockEdges[2]+45
+                        SELF.vel.x=0
+                        xMoved=True
+
+                elif SELF.vel.x<0:
+                    if entityEdges[3]<blockEdges[2]:
+                        SELF.pos.x=blockEdges[3]-45
+                        SELF.vel.x=0
+                        xMoved=True
+            '''
+            #check vel of player, then check where its colliding. then if in air/non 0 y then maintain it but keep x out of block
+
+            rightDiff=entityEdges[3]-blockEdges[2]  #Compares left of the entity with the right of the block
+            leftDiff=entityEdges[2]-blockEdges[3]  #Compares right of entity with left of block
+
+            
+            topDiff=entityEdges[1]-blockEdges[0]  #Compares bottom of entity with top of block
+            bottomDiff=entityEdges[0]-blockEdges[1]  #Compares top of entity with bottom of block
+            #If the player is above the block then the topDiff will be negative, but if the player is below the block then bottomDiff will be positive
+            #if the player is colliding on the top of the block then topDiff will be positive, bottomDiff wil be negative
+
+            if topDiff>bottomDiff and self.pos.y<eachSprite.pos.y:
+                mostY=abs(topDiff)
+            else:
+                mostY=abs(bottomDiff)
+                print("bottom diff")
+
+            if rightDiff<leftDiff and self.pos.x<eachSprite.pos.x:
+                mostX=abs(leftDiff)
+            else:
+                mostX=abs(rightDiff)
+
+            #if SELF.jumping==True:
+                #still somewhat buggy,abs mightve worked a bit
+
+
+            if mostX<mostY:
+                ##do x collisions
+                if leftDiff>0 and self.pos.x<eachSprite.pos.x:
+                    SELF.pos.x=blockEdges[3]-38
+                    #self.pos.x-=rightDiff
+                    SELF.vel.x=0
+
+                else:
+                    SELF.pos.x=blockEdges[2]+38
+                    #self.pos.x+=leftDiff
+                    SELF.vel.x=0
+
+##                hits=pygame.sprite.spritecollide(SELF, otherGroup, False)
+##                if hits:
+##                    if topDiff>0 and SELF.pos.y<eachSprite.pos.y:
+##                        #SELF.pos.y=blockEdges[0]-48
+##                        self.pos.y-=topDiff
+##                        SELF.jumping=False
+##                        SELF.vel.y=0
+##                        break
+##
+##                else:
+##                    #SELF.pos.y=blockEdges[1]+48
+##                    self.pos.y+=bottomDiff
+##                    self.vel.y=0
+
+            else:
+                #print("vertical colissions")
+                if topDiff>0 and SELF.pos.y<eachSprite.pos.y:
+                    SELF.pos.y=blockEdges[0]-48
+                    #self.pos.y-=topDiff
+                    SELF.jumping=False
+                    SELF.vel.y=0
+                    break
+
+                else:
+                    SELF.pos.y=blockEdges[1]+48
+                    print("sent to the bottom")
+                    #self.pos.y+=bottomDiff
+
+##                hits=pygame.sprite.spritecollide(SELF, otherGroup, False)
+##                if hits:
+##                    if leftDiff>0 and rightDiff<0:
+##                        #SELF.pos.x=blockEdges[3]-38
+##                        self.pos.x-=rightDiff
+##                        SELF.vel.x=0
+##                    else:
+##                        #SELF.pos.x=blockEdges[2]+38
+##                        self.pos.x+=leftDiff
+##                        SELF.vel.x=0
+            
+            #my logic is all wrong, sort it out
+            #this nearly works, like so close to working
+
+            #hits=pygame.sprite.spritecollide(SELF, otherGroup, False)
+            #if hits and recursions<10:
+                #SELF.checkCollisions(otherGroup, SELF, recursions+1)
+                #break
+                        
+
+
+    def jump(self, blockGroup):
         ##Process Jumping
-        pass
+             
+        if self.jumping==False:
+            self.vel.y=-13
+            self.jumping=True
 
     def cancelJump(self):
         ##if key is let go then stop upward acceleration
-        pass
+        if self.jumping:
+            if self.vel.y<-3:
+                self.vel.y=-3
 
     def damageTaken(self, damageNumber):
         ##Call in update to change the health
@@ -63,22 +323,35 @@ class MovingEntity(pygame.sprite.Sprite):
 
 class Player(MovingEntity):
 
-    def __init__(self, health, posX, posY, damageNum):
+    def __init__(self, health, posX, posY, damageNum, width, height):
         super().__init__(health, posX, posY, damageNum)
+
+        self.type=0
 
         self.score=0
         self.battleBar=0.0
 
-    def update(self, objectGroup, otherGroup):
-        super().checkCollisions(objectGroup, otherGroup)
-        pass
+        self.surf=pygame.Surface((width,height))
+        self.rect=self.surf.get_rect(center=(self.pos.x, self.pos.y))
+
+        
+        self.surf.fill((0,0,255))
+
+    def update(self, otherGroup, SELF):
+        super().checkCollisions(otherGroup, SELF)
         #Would then perform actions based on the collisions
         #Would also add next frame to animation queue.
+
+    def move(self, ACC, FRIC, blockGroup, SELF, moveType=None):
+        super().move(ACC, FRIC, blockGroup, SELF, moveType)
         
     def heal(self):
         ##HEAL PLAYER, call after update method
         super().damageTaken() #Use negative number for the parameter, negative damage = heal
         pass
+
+    def cancelJump(self):
+        super().cancelJump()
 
     def getAttackType(self):
         ##call when attack key pressed, get the type of attack to perform
@@ -100,30 +373,44 @@ class Player(MovingEntity):
 
 class Enemy(MovingEntity):
 
-    def __init__(self, health, posX, posY, damageNum):
+    def __init__(self, health, posX, posY, damageNum, width, height):
         super().__init__(health, posX, posY, damageNum)
-        
+        self.type=1
+        self.surf=pygame.Surface((width,height))
+        self.rect=self.surf.get_rect(center=(self.pos.x, self.pos.y))
+        self.surf.fill((0,255,0))
     
     def update(self, objectGroup, otherGroup):
         super().checkCollisions(objectGroup, otherGroup)
         pass ##Perform actions based on the collisions
         #If collides with the hitbox for player attack, then would call the super damage taken method.
 
-    def pathfind(self):
+    def pathfind(self, PLAYER, ACC, FRIC, HEIGHT, WIDTH, blockGroup, SELF):
         ##do pathfinding algorithm and call move method.
-        pass
+        if self.pos.x<PLAYER.pos.x:
+            super().move(ACC, FRIC, HEIGHT, WIDTH, blockGroup, SELF, 'right')
 
 
 class Wall(pygame.sprite.Sprite):
-    def __init__(self, posX, posY):
+    def __init__(self, posX, posY, width, height):
         super().__init__()
 
+        self.type=2
+
         self.pos=vec(posX,posY)
+        self.width=width
+        self.height=height
+
+        self.surf=pygame.Surface((width,height))
+        self.rect=self.surf.get_rect(center=(self.pos.x, self.pos.y))
+        self.surf.fill((0,0,0))
 
 
 class HUD(pygame.sprite.Sprite):
     def __init__(self, posX,posY, typeOfHUD, number):
         super().__init__()
+
+        self.type=3
 
         self.num=number #This can represent either the health or the score
         self.pos=vec(posX,posY)
@@ -131,9 +418,99 @@ class HUD(pygame.sprite.Sprite):
 
 class Level():
     def __init__(self):
-        self.level=[[],[],[],[],[],[],[],[]] #8 Rows of blocks, 1 row for ceiling, 1 row for floor, I don't currently know how many columns there will be
-        #The level generation will use characters in the arrays for each row, and will generate the correct sprite/the correct object
+        self.level=[]
+        
+        myFile=open('initialLevel.txt', 'r')
+        for eachRow in myFile:
+            row=[]
+            chars=eachRow
+            for eachChar in chars:
+                if eachChar!='\n':
+                    row.append(eachChar)
 
+            self.level.append(row)
+
+        self.elements={'air': 0,
+                       'block': 1,
+                       'enemy': 2}  #This dictionary doesn't contain entrance and exit as they won't be changeable locations and thus wouldn't be worth including in here
+
+        self.immutables={'air': 'a',
+                         'block': 'b',
+                         'enemy': 'c',
+                         'entrance': 'd',
+                         'exit': 'e',
+                         'player': 'p'}
+
+            
+        #8 Rows of blocks, 1 row for ceiling, 1 row for floor, I don't currently know how many columns there will be
+        #The level generation will use characters in the arrays for each row, and will generate the correct sprite/the correct object
+    
     def generate(self):
+       
+        row=0
         for eachRow in self.level:
-            pass  #Generate level 1 row at a time
+            col=0
+            for eachCol in eachRow:
+                try:
+                    test=int(self.level[row][col])%1 #This makes is so that an error is caused from attempting to divide a letter so it knows to skip that block
+                    if row==0 or row==7 or col==0 or col==9:
+                        self.level[row][col]=self.immutables['block']  #This makes it so that borders of the level are blocks (prevents player falling out of level
+                        col+=1
+                        continue
+
+                    chosenElement=random.random()  #This generates a random number that I can use to determine how to level will be generated
+
+                    if chosenElement>0.95:
+                        self.level[row][col]=self.elements['enemy']
+                        
+                        if row!=7:
+                            self.level[row+1][col]=self.immutables['block']
+
+                            if col==1:
+                                self.level[row+1][col+1]=self.immutables['block']
+                                self.level[row][col+1]=self.immutables['air']
+                                
+                            elif col==8:
+                                self.level[row+1][col-1]=self.immutables['block']
+                                self.level[row][col-1]=self.immutables['air']
+                                
+                            else:
+                                leftRight=random.random()
+                                
+                                if leftRight>0.5:
+                                    self.level[row+1][col-1]=self.immutables['block']
+                                    self.level[row][col-1]=self.immutables['air']
+                                    
+                                else:
+                                    self.level[row+1][col+1]=self.immutables['block']
+                                    self.level[row][col+1]=self.immutables['air']
+
+                    elif chosenElement>0.7:
+                        self.level[row][col]=self.elements['block']
+
+                    else:
+                        self.level[row][col]=self.elements['air']
+
+                    col=col+1
+                except:
+                    col+=1
+            row+=1
+
+
+         ##Entrance exit generation
+        entranceLocation=random.randint(1,6)
+        exitLocation=random.randint(1,6)
+        self.level[entranceLocation][0]=self.immutables['entrance']
+        self.level[entranceLocation+1][1]=self.immutables['block']
+        self.level[entranceLocation][1]=self.immutables['player']
+        self.level[exitLocation][9]=self.immutables['exit']
+        self.level[exitLocation+1][8]=self.immutables['block']  #There is a block next to the entrance and exit so that the player can enter them easily
+        self.level[exitLocation][8]=self.immutables['air'] #There is air next to the entrance and exit so that they aren't blocked off
+            
+
+
+##Debugging/Testing
+'''level=Level()
+level.generate()
+for eachRow in level.level:
+    print(eachRow)'''
