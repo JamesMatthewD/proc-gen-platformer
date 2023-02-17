@@ -43,7 +43,7 @@ def screenUpdate():
     
 
 def playerMove(moveType, SELF):
-    PLAYER.move(ACC, FRIC,  blocks, SELF, 'moveType')
+    PLAYER.move(ACC, FRIC,  blocks, SELF, moveType)
 
 
 def levelBlit():
