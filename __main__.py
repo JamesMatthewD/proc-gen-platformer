@@ -2,6 +2,7 @@ import pygame
 from pygame import *
 import classes, random, os, sys, time
 vec=pygame.math.Vector2
+vec=pygame.math.Vector2
 
 pygame.init()  #Pygame Initialisation
 
@@ -13,12 +14,26 @@ ACC=1.5
 FRIC=-0.12
 
 FPS=90  #Screen setup
+pygame.display.set_caption('wow amazing code')
+ACC=1.5
+FRIC=-0.12
+
+FPS=90  #Screen setup
 
 framePerSec=pygame.time.Clock()  #will be used for tracking FPS to detect issues when testing
 
 PLAYER=classes.Player(5, 0, 0, 3, 75, 95)
+PLAYER=classes.Player(5, 0, 0, 3, 75, 95)
 allSprites=pygame.sprite.Group()
 allSprites.add(PLAYER)
+blocks=pygame.sprite.Group()
+enemies=pygame.sprite.Group()
+
+controls=[[276, 'left', False],  #From left to right the values are the key (for pygame), what it represents and if it is held or not
+          [275, 'right', False],
+          [273, 'jump', False],
+          [122, 'attack', False],
+          [120, 'specialAttack', False]]  #Will hopefully be editable but these will be the controls for the player
 blocks=pygame.sprite.Group()
 enemies=pygame.sprite.Group()
 
@@ -84,6 +99,7 @@ while True:  #Game Loop
     moved=False
 
     for event in pygame.event.get():
+
 
         if event.type==pygame.QUIT:
             pygame.quit()
