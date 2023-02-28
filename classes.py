@@ -65,15 +65,15 @@ class MovingEntity(pygame.sprite.Sprite):
             pass
 
 
-    def checkCollisions(self, otherGroup, SELF, recursions=0):
-        collisions=pygame.sprite.spritecollide(SELF, otherGroup, False)
-        xMoved=False
-        yMoved=False        
+    def checkCollisions(self, otherGroup, SELF):
+        
+        collisions=pygame.sprite.spritecollide(SELF, otherGroup, False)  #This is the pygame built in function to check for sprite collisions
         for eachSprite in collisions:
 
             #print("est: ", eachSprite.type, "st: ", SELF.type)
 
-            if eachSprite.type==2 and (SELF.type==1 or SELF.type==0) and eachSprite.type!=SELF.type and xMoved==False and yMoved==False:
+            if eachSprite.type==2 and (SELF.type==1 or SELF.type==0) and eachSprite.type!=SELF.type:
+            #This is extra validation to make sure the correct collisions is applied to the sprite
 
                 #print("enemy or player attempting to collide with wall")
 
@@ -171,7 +171,7 @@ class MovingEntity(pygame.sprite.Sprite):
                 print(SELF.pos)
                 '''
 
-                ##find edge of block and player, then compare and put player in correct place relative
+                ##find edge of block and entity, then compare and put entity in correct place relative
                 blockEdges=[]  #I add each of the edges for the block into an array
                 blockEdges.append(eachSprite.rect.top)
                 blockEdges.append(eachSprite.rect.bottom)
@@ -222,19 +222,17 @@ class MovingEntity(pygame.sprite.Sprite):
             #If the player is above the block then the topDiff will be negative, but if the player is below the block then bottomDiff will be positive
             #if the player is colliding on the top of the block then topDiff will be positive, bottomDiff wil be negative
 
+
             if topDiff>bottomDiff and self.pos.y<eachSprite.pos.y:
                 mostY=abs(topDiff)
             else:
                 mostY=abs(bottomDiff)
-                print("bottom diff")
+                #print("bottom diff")
 
             if rightDiff<leftDiff and self.pos.x<eachSprite.pos.x:
                 mostX=abs(leftDiff)
             else:
                 mostX=abs(rightDiff)
-
-            #if SELF.jumping==True:
-                #still somewhat buggy,abs mightve worked a bit
 
 
             if mostX<mostY:
@@ -274,7 +272,7 @@ class MovingEntity(pygame.sprite.Sprite):
 
                 else:
                     SELF.pos.y=blockEdges[1]+48
-                    print("sent to the bottom")
+                    #print("sent to the bottom")
                     #self.pos.y+=bottomDiff
 
 ##                hits=pygame.sprite.spritecollide(SELF, otherGroup, False)
@@ -287,15 +285,7 @@ class MovingEntity(pygame.sprite.Sprite):
 ##                        #SELF.pos.x=blockEdges[2]+38
 ##                        self.pos.x+=leftDiff
 ##                        SELF.vel.x=0
-            
-            #my logic is all wrong, sort it out
-            #this nearly works, like so close to working
-
-            #hits=pygame.sprite.spritecollide(SELF, otherGroup, False)
-            #if hits and recursions<10:
-                #SELF.checkCollisions(otherGroup, SELF, recursions+1)
-                #break
-                        
+                                    
 
 
     def jump(self, blockGroup):
@@ -379,16 +369,33 @@ class Enemy(MovingEntity):
         self.surf=pygame.Surface((width,height))
         self.rect=self.surf.get_rect(center=(self.pos.x, self.pos.y))
         self.surf.fill((0,255,0))
+
+        self.pathfindCooldown=35
+        self.direction='left'
     
-    def update(self, objectGroup, otherGroup):
-        super().checkCollisions(objectGroup, otherGroup)
-        pass ##Perform actions based on the collisions
+    def update(self, otherGroup, SELF):
+        super().checkCollisions(otherGroup, SELF)
+        ##Perform actions based on the collisions
         #If collides with the hitbox for player attack, then would call the super damage taken method.
 
-    def pathfind(self, PLAYER, ACC, FRIC, HEIGHT, WIDTH, blockGroup, SELF):
-        ##do pathfinding algorithm and call move method.
-        if self.pos.x<PLAYER.pos.x:
-            super().move(ACC, FRIC, HEIGHT, WIDTH, blockGroup, SELF, 'right')
+    def pathfind(self, PLAYER, ACC, FRIC, blockGroup, SELF):
+        ##do pathfinding algorithm and call move method
+
+        if self.pathfindCooldown==35:
+            if self.pos.x<PLAYER.pos.x:
+                self.direction='right'
+
+            else:
+                self.direction='left'
+
+            self.pathfindCooldown=0
+
+        self.pathfindCooldown+=1
+
+        if self.pos.y>PLAYER.pos.y and self.pathfindCooldown%3==0:
+            super().move(ACC/3.5, FRIC, blockGroup, SELF, 'jump')
+        else:
+            super().move(ACC/3.5, FRIC, blockGroup, SELF, self.direction)
 
 
 class Wall(pygame.sprite.Sprite):

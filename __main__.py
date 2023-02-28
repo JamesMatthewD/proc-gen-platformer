@@ -2,7 +2,6 @@ import pygame
 from pygame import *
 import classes, random, os, sys, time
 vec=pygame.math.Vector2
-vec=pygame.math.Vector2
 
 pygame.init()  #Pygame Initialisation
 
@@ -13,41 +12,38 @@ pygame.display.set_caption('wow amazing code')
 ACC=1.5
 FRIC=-0.12
 
-FPS=90  #Screen setup
-pygame.display.set_caption('wow amazing code')
-ACC=1.5
-FRIC=-0.12
+FPS=60  #Screen setup
 
-FPS=90  #Screen setup
 
 framePerSec=pygame.time.Clock()  #will be used for tracking FPS to detect issues when testing
 
-PLAYER=classes.Player(5, 0, 0, 3, 75, 95)
 PLAYER=classes.Player(5, 0, 0, 3, 75, 95)
 allSprites=pygame.sprite.Group()
 allSprites.add(PLAYER)
 blocks=pygame.sprite.Group()
 enemies=pygame.sprite.Group()
 
-controls=[[276, 'left', False],  #From left to right the values are the key (for pygame), what it represents and if it is held or not
-          [275, 'right', False],
-          [273, 'jump', False],
-          [122, 'attack', False],
-          [120, 'specialAttack', False]]  #Will hopefully be editable but these will be the controls for the player
-blocks=pygame.sprite.Group()
-enemies=pygame.sprite.Group()
+controls=[[0, 'left', False],  #From left to right the values are the key (for pygame), what it represents and if it is held or not
+          [0, 'right', False],
+          [0, 'jump', False],
+          [0, 'attack', False],
+          [0, 'specialAttack', False]]  #Will hopefully be editable but these will be the controls for the player
 
-controls=[[276, 'left', False],  #From left to right the values are the key (for pygame), what it represents and if it is held or not
-          [275, 'right', False],
-          [273, 'jump', False],
-          [122, 'attack', False],
-          [120, 'specialAttack', False]]  #Will hopefully be editable but these will be the controls for the player
+myFile=open('controls.txt', 'r')
+control=0
+for eachLine in myFile:
+    controls[control][0]=int(eachLine.strip('\n'))  #This changes the controls to the ones specified in the controls text file, the stripping of the line is to remove the new line part of the text
+    control+=1 
+
+#print(controls)
 
 
 def screenUpdate():
     for eachSprite in allSprites:
         try:
             screen.blit(eachSprite.surf, eachSprite.rect)
+            if eachSprite.type==1:
+                eachSprite.pathfind(PLAYER,ACC,FRIC,blocks,eachSprite)
             eachSprite.update(allSprites, eachSprite)
         except:
             pass
