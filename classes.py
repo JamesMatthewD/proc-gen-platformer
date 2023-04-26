@@ -1,6 +1,8 @@
 import pygame
 from pygame.locals import *
 import random
+import pathfind
+
 pygame.init()
 vec=pygame.math.Vector2
 
@@ -20,29 +22,27 @@ class MovingEntity(pygame.sprite.Sprite):
 
     def move(self, ACC, FRIC, blockGroup, SELF, moveType=None):
 
-        self.oldPos=self.pos
-
-        self.acc=vec(0,0.32)
+        self.acc=vec(0,0.32)  #This is the constant for gravity so that at the start of every movement frame, the player starts falling.
         
         if moveType=='left' or moveType=='right':
-            ##Process left movement
+            
             if moveType=='left':
                 self.acc.x-=ACC
             else:
+                #If its not left movement it will be right movement
                 self.acc.x+=ACC
 
         self.acc.x+=self.vel.x * FRIC
-        self.vel+=self.acc
+        self.vel+=self.acc  #This updates the velocity with the acceleration calculated
 
+        self.pos.y+=self.vel.y+0.5*self.acc.y  #This updates the y position of the player
 
-        self.pos.y+=self.vel.y+0.5*self.acc.y
-
+        self.pos.x+=self.vel.x+0.5*self.acc.x #This updates the x position of the player
         
-        self.pos.x+=self.vel.x+0.5*self.acc.x
 
-        self.checkCollisions(blockGroup, SELF)
+        self.checkCollisions(blockGroup, SELF)  #Performs collision checks and acts on them
 
-        self.rect=self.surf.get_rect(center=(self.pos.x, self.pos.y))
+        self.rect=self.surf.get_rect(center=(self.pos.x, self.pos.y))  #This updates where the rectangle shown is located on the screen.
                 
         if moveType=='jump':
             ##Call jump method//continue jump
@@ -378,24 +378,19 @@ class Enemy(MovingEntity):
         ##Perform actions based on the collisions
         #If collides with the hitbox for player attack, then would call the super damage taken method.
 
-    def pathfind(self, PLAYER, ACC, FRIC, blockGroup, SELF):
+    def pathfind(self, PLAYER, ACC, FRIC, blockGroup, level):
         ##do pathfinding algorithm and call move method
+        '''Assing player to square on level and then pathfind from the enemy'''
+        closestBlock=vec(int(PLAYER.pos.x/160), int(PLAYER.pos.y/(900/8)))
+        currentPos=vec(int(self.pos.x/160), int(self.pos.y/(900/8)))
+        path = pathfind.enemyPathfind(currentPos, closestBlock, level)
 
-        if self.pathfindCooldown==35:
-            if self.pos.x<PLAYER.pos.x:
-                self.direction='right'
+        super.move(ACC, FRIC,blockgroup, self, path[0])
 
-            else:
-                self.direction='left'
+        if path[1]=='jump':
+            super.move(ACC, FRIC,blockgroup, self, path[1])
+        
 
-            self.pathfindCooldown=0
-
-        self.pathfindCooldown+=1
-
-        if self.pos.y>PLAYER.pos.y and self.pathfindCooldown%3==0:
-            super().move(ACC/3.5, FRIC, blockGroup, SELF, 'jump')
-        else:
-            super().move(ACC/3.5, FRIC, blockGroup, SELF, self.direction)
 
 
 class Wall(pygame.sprite.Sprite):
@@ -426,16 +421,6 @@ class HUD(pygame.sprite.Sprite):
 class Level():
     def __init__(self):
         self.level=[]
-        
-        myFile=open('initialLevel.txt', 'r')
-        for eachRow in myFile:
-            row=[]
-            chars=eachRow
-            for eachChar in chars:
-                if eachChar!='\n':
-                    row.append(eachChar)
-
-            self.level.append(row)
 
         self.elements={'air': 0,
                        'block': 1,
@@ -449,70 +434,102 @@ class Level():
                          'player': 'p'}
 
             
-        #8 Rows of blocks, 1 row for ceiling, 1 row for floor, I don't currently know how many columns there will be
+        #8 Rows of blocks, 1 row for ceiling, 1 row for floor
         #The level generation will use characters in the arrays for each row, and will generate the correct sprite/the correct object
     
     def generate(self):
-       
-        row=0
-        for eachRow in self.level:
-            col=0
-            for eachCol in eachRow:
-                try:
-                    test=int(self.level[row][col])%1 #This makes is so that an error is caused from attempting to divide a letter so it knows to skip that block
-                    if row==0 or row==7 or col==0 or col==9:
-                        self.level[row][col]=self.immutables['block']  #This makes it so that borders of the level are blocks (prevents player falling out of level
-                        col+=1
-                        continue
 
-                    chosenElement=random.random()  #This generates a random number that I can use to determine how to level will be generated
+        validated=False
 
-                    if chosenElement>0.95:
-                        self.level[row][col]=self.elements['enemy']
-                        
-                        if row!=7:
-                            self.level[row+1][col]=self.immutables['block']
+        while validated==False:
 
-                            if col==1:
-                                self.level[row+1][col+1]=self.immutables['block']
-                                self.level[row][col+1]=self.immutables['air']
-                                
-                            elif col==8:
-                                self.level[row+1][col-1]=self.immutables['block']
-                                self.level[row][col-1]=self.immutables['air']
-                                
-                            else:
-                                leftRight=random.random()
-                                
-                                if leftRight>0.5:
+            self.level=[]
+        
+            myFile=open('initialLevel.txt', 'r')
+            for eachRow in myFile:
+                row=[]
+                chars=eachRow
+                for eachChar in chars:
+                    if eachChar!='\n':
+                        row.append(eachChar)
+
+                self.level.append(row)
+
+            myFile.close()  #This regenerates the level as it either was not possible or is the first loop and thus needs to generate a level to be validated
+            
+            row=0
+            for eachRow in self.level:
+                col=0
+                for eachCol in eachRow:
+                    try:
+                        test=int(self.level[row][col])%1 #This makes is so that an error is caused from attempting to divide a letter so it knows to skip that block
+                        if row==0 or row==7 or col==0 or col==9:
+                            self.level[row][col]=self.immutables['block']  #This makes it so that borders of the level are blocks (prevents player falling out of level
+                            col+=1
+                            continue
+
+                        chosenElement=random.random()  #This generates a random number that I can use to determine how to level will be generated
+
+                        if chosenElement>0.95:
+                            self.level[row][col]=self.elements['enemy']
+                            
+                            if row!=7:
+                                self.level[row+1][col]=self.immutables['block']
+
+                                if col==1:
+                                    self.level[row+1][col+1]=self.immutables['block']
+                                    self.level[row][col+1]=self.immutables['air']
+                                    
+                                elif col==8:
                                     self.level[row+1][col-1]=self.immutables['block']
                                     self.level[row][col-1]=self.immutables['air']
                                     
                                 else:
-                                    self.level[row+1][col+1]=self.immutables['block']
-                                    self.level[row][col+1]=self.immutables['air']
+                                    leftRight=random.random()  #This randomly choses a direction for the block under the enemy to generate
+                                    #I chose to add this because enemies should not be trapped and surrounded by blocks so there needs to be at least one block of movement available
+                                    if leftRight>0.5:
+                                        self.level[row+1][col-1]=self.immutables['block']
+                                        self.level[row][col-1]=self.immutables['air']
+                                        
+                                    else:
+                                        self.level[row+1][col+1]=self.immutables['block']
+                                        self.level[row][col+1]=self.immutables['air']
 
-                    elif chosenElement>0.7:
-                        self.level[row][col]=self.elements['block']
+                        elif chosenElement>0.75:
+                            self.level[row][col]=self.elements['block']
 
-                    else:
-                        self.level[row][col]=self.elements['air']
+                        else:
+                            self.level[row][col]=self.elements['air']
 
-                    col=col+1
-                except:
-                    col+=1
-            row+=1
+                        col=col+1
+                    except:
+                        col+=1
+                row+=1
 
 
-         ##Entrance exit generation
-        entranceLocation=random.randint(1,6)
-        exitLocation=random.randint(1,6)
-        self.level[entranceLocation][0]=self.immutables['entrance']
-        self.level[entranceLocation+1][1]=self.immutables['block']
-        self.level[entranceLocation][1]=self.immutables['player']
-        self.level[exitLocation][9]=self.immutables['exit']
-        self.level[exitLocation+1][8]=self.immutables['block']  #There is a block next to the entrance and exit so that the player can enter them easily
-        self.level[exitLocation][8]=self.immutables['air'] #There is air next to the entrance and exit so that they aren't blocked off
+             ##Entrance exit generation
+            entranceLocation=random.randint(1,6)
+            exitLocation=random.randint(1,6)
+            self.level[entranceLocation][0]=self.immutables['entrance']
+            self.level[entranceLocation+1][1]=self.immutables['block']
+            self.level[entranceLocation][1]=self.immutables['player']
+            self.level[exitLocation][9]=self.immutables['exit']
+            self.level[exitLocation+1][8]=self.immutables['block']  #There is a block next to the entrance and exit so that the player can enter them easily
+            self.level[exitLocation][8]=self.immutables['air'] #There is air next to the entrance and exit so that they aren't blocked off
+
+            for eachRow in self.level:
+                print(eachRow)
+
+            print('\n')
+
+            exitCoord=tuple((9, exitLocation))
+
+            '''validated=True'''
+            
+            #self.level=[[1,1,1,1,1,1,1,1,1,1], [1,1,1,1,1,1,1,1,1,1], [1,1,1,1,1,1,1,1,1,1], [1,1,1,1,1,1,1,1,1,1], [1,1,1,1,1,1,1,1,1,1], [1,1,1,1,1,1,1,1,1,1], [1,1,1,1,1,1,1,1,1,1], [1,1,1,1,1,1,1,1,1,1]]
+
+            if pathfind.pathfind(exitCoord, tuple((1, entranceLocation)), self.level)!=False:
+                validated=True  #This updates the while condition so that if a path is found then the level is passed through to the blitting stage
             
 
 
